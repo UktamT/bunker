@@ -1,6 +1,6 @@
 import tg from "../../assets/telegram_logo_paper_plane_icon_258977.svg";
 import backTo from "../../assets/free-icon-left-arrow-329350.png";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useChatStore } from "../../store/chatStore";
 
 export const ChatWindow = () => {
@@ -14,6 +14,14 @@ export const ChatWindow = () => {
       setMessage("");
     }
   };
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    scrollToBottom();
+  }, [chatHistory]);
 
   return (
     <>
@@ -55,6 +63,7 @@ export const ChatWindow = () => {
             </div>
           );
         })}
+        <div ref={messagesEndRef} />
       </main>
 
       <footer className="chat-footer">
