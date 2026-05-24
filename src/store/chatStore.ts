@@ -2,9 +2,14 @@ import { create } from "zustand";
 import { io, Socket } from "socket.io-client";
 
 interface Message {
+  id: string;
   username: string;
   text: string;
   time: string;
+  replyTo?: {
+    username: string;
+    text: string;
+  } | null;
 }
 
 interface ChatState {
@@ -17,6 +22,9 @@ interface ChatState {
   sendMessage: (text: string) => void;
   setUserName: (username: string) => void;
   logout: () => void;
+  replyTo: Message | null;
+  setReplyTo: (message: Message | null) => void;
+  clearChatHistory: () => void;
 }
 
 export const useChatStore = create<ChatState>((set, get) => ({
@@ -25,6 +33,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   onlineCount: 0,
   chatHistory: [],
   socket: null,
+  replyTo: null,
   initializeSocket: (username) => {
     if (get().socket) return;
 
@@ -42,16 +51,42 @@ export const useChatStore = create<ChatState>((set, get) => ({
       set({ onlineCount });
     });
 
+    socket.on("messages_cleared", () => {
+      set({ chatHistory: [] });
+    });
+
     set({ socket, username });
   },
+
+  clearChatHistory: () => {
+    const socket = get().socket;
+
+    const password = prompt("Введите пароль");
+
+    if (password === "forreal76") {
+      if (socket) {
+        socket.emit("clear_messages");
+      }
+    } else {
+      alert("Неверный пароль");
+    }
+  },
+
   sendMessage: (text) => {
     const socket = get().socket;
     const username = get().username;
+    const replyingTo = get().replyTo;
 
     if (socket && username) {
-      socket.emit("send_message", { username, text: text.trim() });
+      socket.emit("send_message", {
+        username,
+        text: text.trim(),
+        replyTo: replyingTo
+          ? { username: replyingTo.username, text: replyingTo.text }
+          : null,
+      });
     }
-    set({ message: "" });
+    set({ message: "", replyTo: null });
   },
   setUserName: (username) => set({ username }),
   logout: () => {
@@ -62,4 +97,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
     localStorage.removeItem("username");
     set({ username: "", socket: null, chatHistory: [] });
   },
+
+  setReplyTo: (message) => set({ replyTo: message }),
 }));

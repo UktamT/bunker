@@ -1,11 +1,20 @@
 import tg from "../../assets/telegram_logo_paper_plane_icon_258977.svg";
-import backTo from "../../assets/free-icon-left-arrow-329350.png";
+import backTo from "../../assets/image_2026-05-24_18-44-40.png";
+import closeIcon from "../../assets/icons8-отмена.svg";
 import { useState, useEffect, useRef } from "react";
 import { useChatStore } from "../../store/chatStore";
 
 export const ChatWindow = () => {
-  const { username, chatHistory, sendMessage, logout, onlineCount } =
-    useChatStore();
+  const {
+    username,
+    chatHistory,
+    sendMessage,
+    logout,
+    onlineCount,
+    replyTo,
+    setReplyTo,
+    clearChatHistory,
+  } = useChatStore();
   const [message, setMessage] = useState("");
 
   const handleSendMessage = () => {
@@ -40,6 +49,13 @@ export const ChatWindow = () => {
             Онлайн: <strong>{onlineCount}</strong>
           </span>
         </div>
+        <span
+          style={{ cursor: "pointer" }}
+          className="clear-chat"
+          onClick={() => clearChatHistory()}
+        >
+          Очистить чат
+        </span>
         <button className="logout-btn" onClick={logout}>
           Выйти
         </button>
@@ -54,9 +70,31 @@ export const ChatWindow = () => {
               key={index}
               className={`message-wrapper ${isMe ? "me" : "other"}`}
             >
-              {!isMe && <span className="message-author">{msg.username}</span>}
+              {!isMe && (
+                <span
+                  onClick={() => setReplyTo(msg)}
+                  style={{ cursor: "pointer" }}
+                  className="message-author"
+                >
+                  {msg.username}⠀⠀Ответить
+                </span>
+              )}
 
               <div className="message-bubble">
+                {msg.replyTo && (
+                  <div
+                    className="reply-quote"
+                    style={{
+                      borderLeft: "2px solid #5865f2",
+                      paddingLeft: "6px",
+                      marginBottom: "6px",
+                      opacity: 0.7,
+                      fontSize: "13px",
+                    }}
+                  >
+                    <strong>{msg.replyTo.username}</strong>: {msg.replyTo.text}
+                  </div>
+                )}
                 <p className="message-text">{msg.text}</p>
                 <span className="message-time">{msg.time}</span>
               </div>
@@ -67,6 +105,32 @@ export const ChatWindow = () => {
       </main>
 
       <footer className="chat-footer">
+        {replyTo && (
+          <div
+            className="reply-preview"
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+
+              padding: "8px",
+              background: "#292a2c",
+              borderRadius: "6px",
+              marginBottom: "8px",
+              fontSize: "13px",
+            }}
+          >
+            <div>
+              Ответ пользователю <strong>{replyTo.username}</strong>
+            </div>
+
+            <img
+              onClick={() => setReplyTo(null)}
+              style={{ width: "16px", height: "16px", cursor: "pointer" }}
+              src={closeIcon}
+              alt="Close"
+            />
+          </div>
+        )}
         <div className="input-wrapper">
           <input
             type="text"
